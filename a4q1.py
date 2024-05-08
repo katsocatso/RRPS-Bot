@@ -235,15 +235,15 @@ with tf.Session() as sess:
 
     print("training using DQN now...")
     
-    # Test against only copybot
-    copybot_id = 7
-    agents = [
-            myAgent,
-            create_roshambo_bot_agent(1, num_actions, roshambo_bot_names, copybot_id) 
-        ]
-    avg_eval_returns = train_agents(env, myAgentIdx, agents, num_players, num_train_episodes, checkpoint_dir, verbose=True)
-    print("Avg return ", avg_eval_returns)
-    myAgent.save(checkpoint_dir) 
+    # # Test against only copybot
+    # copybot_id = 7
+    # agents = [
+    #         myAgent,
+    #         create_roshambo_bot_agent(1, num_actions, roshambo_bot_names, copybot_id) 
+    #     ]
+    # avg_eval_returns = train_agents(env, myAgentIdx, agents, num_players, num_train_episodes, checkpoint_dir, verbose=False)
+    # print("Avg return ", avg_eval_returns)
+    # myAgent.save(checkpoint_dir) 
     
     for i in range(len(roshambo_bot_names)):
         print("Training against bot " + roshambo_bot_names[i] + " now")
@@ -252,7 +252,7 @@ with tf.Session() as sess:
             myAgent,
             create_roshambo_bot_agent(1, num_actions, roshambo_bot_names, i) 
         ]
-        avg_eval_returns = train_agents(env, myAgentIdx, agents, num_players, num_train_episodes, checkpoint_dir, verbose=True)
+        avg_eval_returns = train_agents(env, myAgentIdx, agents, num_players, num_train_episodes, checkpoint_dir, verbose=False)
         print("Avg return ", avg_eval_returns)
         myAgent.save(checkpoint_dir)
 
@@ -298,6 +298,17 @@ class MyAgent(rl_agent.AbstractAgent):
     self.regret_sum = np.zeros(num_actions)
     self.strategy = np.zeros(num_actions)
     self.strategy_sum = np.zeros(num_actions)
+    self.tf_session = tf.Session()
+    self.agent = dqn.DQN(
+            session=sess,
+            player_id=myAgentIdx,
+            state_representation_size=info_state_size,
+            num_actions=num_actions,
+            hidden_layers_sizes=64,
+            replay_buffer_capacity=int(1e5),
+            batch_size=32)
+    self.tf_session.run(tf.global_variables_initializer())
+    
 
   def step(self, time_step, is_evaluation=False):
     # If it is the end of the episode, don't select an action.
@@ -307,7 +318,7 @@ class MyAgent(rl_agent.AbstractAgent):
     # game and state can be obtained as follows:
 
     game, state = pyspiel.deserialize_game_and_state(time_step.observations["serialized_state"])
-
+    
     # A useful piece of information is the history (previous actions taken by agents).
     # You can access this by state.history()
 
