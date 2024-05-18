@@ -160,6 +160,9 @@ class MyAgent(rl_agent.AbstractAgent):
       action = random.randint(0, self.num_actions - 1)
     else:
       # ExpectedValue(x) = P(x+2) - P(x+1)
+      # e.g. rock = 0, paper = 1, scissors = 2
+      # Exp_val(rock) = P(scissors) - P(paper)
+      # since rewards system is like: wins = 1, loss = -1, ties = 0
       exp_val = np.array([
           (self.rotn_stats[2] - self.rotn_stats[1]),
           (self.rotn_stats[0] - self.rotn_stats[2]),
@@ -174,7 +177,7 @@ class MyAgent(rl_agent.AbstractAgent):
         
       offset = random.choices(population=[0,1,2], weights = exp_val, k = 1)[0]
       action = (offset + state.history()[-1]) % self.num_actions
-      
+    
     probs = np.zeros(self.num_actions)
     probs[action] = 1
     return rl_agent.StepOutput(action=action, probs=probs)
